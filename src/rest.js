@@ -3,39 +3,37 @@ const fetch = require('node-fetch')
 
 const constants = require('./constants')
 
-const { formatBedrockAuth, formatJavaAuth } = require('./util')
+const { formatBedrockAuth } = require('./util')
 
 module.exports = class Rest {
-  constructor (authflow, platform, options) {
+  constructor(tokens, platform, options) {
     this.options = options
     this.platform = platform
     this.host = constants[platform].host
     this.userAgent = constants[platform].userAgent
     if (platform === 'bedrock') {
-      this.getAuth = () => authflow.getXboxToken(constants.bedrock.relyingParty).then(formatBedrockAuth)
-    } else if (platform === 'java') {
-      this.getAuth = () => authflow.getMinecraftJavaToken({ fetchProfile: true }).then(formatJavaAuth)
+      this.getAuth = () => formatBedrockAuth(tokens)
     }
     this.maxRetries = options.maxRetries ?? 4
   }
 
-  get (route, options) {
+  get(route, options) {
     return this.prepareRequest({ ...options, route, method: 'get' })
   }
 
-  post (route, options) {
+  post(route, options) {
     return this.prepareRequest({ ...options, route, method: 'post' })
   }
 
-  put (route, options) {
+  put(route, options) {
     return this.prepareRequest({ ...options, route, method: 'put' })
   }
 
-  delete (route, options) {
+  delete(route, options) {
     return this.prepareRequest({ ...options, route, method: 'delete' })
   }
 
-  async prepareRequest (request) {
+  async prepareRequest(request) {
     const url = `${this.host}${request.route}`
 
     const headers = {
@@ -71,7 +69,7 @@ module.exports = class Rest {
     return this.execRequest(url, fetchOptions)
   }
 
-  async execRequest (url, options, retries = 0) {
+  async execRequest(url, options, retries = 0) {
     const response = await fetch(url, options)
 
     if (response.ok) {

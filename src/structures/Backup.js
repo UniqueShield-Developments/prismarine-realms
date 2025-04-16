@@ -1,7 +1,7 @@
 module.exports = class Backup {
   #api
   #realm
-  constructor (api, realm, data) {
+  constructor(api, realm, data) {
     this.#api = api
     this.#realm = realm
     Object.assign(this, {
@@ -20,12 +20,11 @@ module.exports = class Backup {
     })
   }
 
-  async getDownload () {
-    if (this.#api.platform === 'java') throw new Error('Indiviual backup downloads is not a feature of Java Realms API, only getRealmWorldDownload() is available')
+  async getDownload() {
     return await this.#api.getRealmWorldDownload(this.#realm.realmId, this.#realm.slotId, this.id)
   }
 
-  async restore () {
+  async restore() {
     return await this.#api.restoreRealmFromBackup(this.#realm.realmId, this.id)
   }
 }
