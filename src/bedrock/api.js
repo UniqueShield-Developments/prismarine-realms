@@ -1,16 +1,20 @@
+const path = require("path")
+const fs = require('fs');
+const util = require("../util")
+
 const RealmAPI = require('../index')
 
 const Realm = require('../structures/Realm')
 const Download = require('../structures/Download')
 
 module.exports = class BedrockRealmAPI extends RealmAPI {
-  async getRealmAddress (realmId) {
+  async getRealmAddress(realmId) {
     const data = await this.rest.get(`/worlds/${realmId}/join`)
     const [host, port] = data.address.split(':')
     return { host, port: Number(port) }
   }
 
-  async getRealmFromInvite (realmInviteCode, invite = true) {
+  async getRealmFromInvite(realmInviteCode, invite = true) {
     if (!realmInviteCode) throw new Error('Need to provide a realm invite code/link')
     const clean = realmInviteCode.replace(/https:\/\/realms.gg\//g, '')
     const data = await this.rest.get(`/worlds/v1/link/${clean}`)
@@ -18,7 +22,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async getRealmInvite (realmId) {
+  async getRealmInvite(realmId) {
     const data = await this.rest.get(`/links/v1?worldId=${realmId}`)
     return {
       inviteCode: data[0].linkId,
@@ -30,7 +34,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     }
   }
 
-  async refreshRealmInvite (realmId) {
+  async refreshRealmInvite(realmId) {
     const data = await this.rest.post('/links/v1', {
       body: {
         type: 'INFINITE',
@@ -47,11 +51,11 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     }
   }
 
-  async getPendingInviteCount () {
+  async getPendingInviteCount() {
     return await this.rest.get('/invites/count/pending')
   }
 
-  async getPendingInvites () {
+  async getPendingInvites() {
     const data = await this.rest.get('/invites/pending')
     return data.invites.map(invite => {
       return {
@@ -65,22 +69,22 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     })
   }
 
-  async acceptRealmInvitation (invitationId) {
+  async acceptRealmInvitation(invitationId) {
     await this.rest.put(`/invites/accept/${invitationId}`)
   }
 
-  async rejectRealmInvitation (invitationId) {
+  async rejectRealmInvitation(invitationId) {
     await this.rest.put(`/invites/reject/${invitationId}`)
   }
 
-  async acceptRealmInviteFromCode (inviteCode) {
+  async acceptRealmInviteFromCode(inviteCode) {
     if (!inviteCode) throw new Error('Need to provide a realm invite code/link')
     const clean = inviteCode.replace(/https:\/\/realms.gg\//g, '')
     const data = await this.rest.post(`/invites/v1/link/accept/${clean}`)
     return new Realm(this, data)
   }
 
-  async invitePlayer (realmId, uuid) {
+  async invitePlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -91,12 +95,12 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async getRealmWorldDownload (realmId, slotId, backupId = 'latest') {
+  async getRealmWorldDownload(realmId, slotId, backupId = 'latest') {
     const data = await this.rest.get(`/archive/download/world/${realmId}/${slotId}/${backupId}`) // if backupId = latest will get the world as it is now not the most recent backup
     return new Download(this, data)
   }
 
-  async resetRealm (realmId) {
+  async resetRealm(realmId) {
     await this.rest.put(`/worlds/${realmId}/reset`)
   }
 
@@ -107,7 +111,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
   //   })
   // }
 
-  async removePlayerFromRealm (realmId, xuid) {
+  async removePlayerFromRealm(realmId, xuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -118,7 +122,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async opRealmPlayer (realmId, uuid) {
+  async opRealmPlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -129,7 +133,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async deopRealmPlayer (realmId, uuid) {
+  async deopRealmPlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -140,19 +144,19 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async banPlayerFromRealm (realmId, uuid) {
+  async banPlayerFromRealm(realmId, uuid) {
     await this.rest.post(`/worlds/${realmId}/blocklist/${uuid}`)
   }
 
-  async unbanPlayerFromRealm (realmId, uuid) {
+  async unbanPlayerFromRealm(realmId, uuid) {
     await this.rest.delete(`/worlds/${realmId}/blocklist/${uuid}`)
   }
 
-  async removeRealmFromJoinedList (realmId) {
+  async removeRealmFromJoinedList(realmId) {
     await this.rest.delete(`/invites/${realmId}`)
   }
 
-  async changeIsTexturePackRequired (realmId, forced) {
+  async changeIsTexturePackRequired(realmId, forced) {
     if (forced) {
       await this.rest.put(`/world/${realmId}/content/texturePacksRequired`)
     } else {
@@ -160,7 +164,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     }
   }
 
-  async changeRealmDefaultPermission (realmId, permission) {
+  async changeRealmDefaultPermission(realmId, permission) {
     await this.rest.put(`/world/${realmId}/defaultPermission`, {
       body: {
         permission: permission.toUpperCase()
@@ -168,7 +172,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     })
   }
 
-  async changeRealmPlayerPermission (realmId, permission, uuid) {
+  async changeRealmPlayerPermission(realmId, permission, uuid) {
     await this.rest.put(`/world/${realmId}/userPermission`, {
       body: {
         permission: permission.toUpperCase(),
@@ -176,4 +180,114 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
       }
     })
   }
+
+  async isPackAccessible(manifest) {
+    const [authHeader, authToken] = this.rest.getAuth()
+
+    const versionStr = Array.isArray(manifest.header.version)
+      ? manifest.header.version.join('.')
+      : manifest.header.version
+
+    const res = await fetch(`https://pocket.realms.minecraft.net/pack/${manifest.header.uuid}/${versionStr}`, {
+      method: 'HEAD',
+      headers: {
+        [authHeader]: authToken,
+        'User-Agent': 'MCPE/UWP',
+        'Accept': '*/*'
+      }
+    })
+
+    return res.status === 204
+  }
+
+
+  async uploadPack(archivePath, realmId) {
+    const { token, uploadUrl } = await this.rest.get(`/archive/upload/packs/${realmId}/1`)
+
+    await fetch(uploadUrl, {
+      method: 'POST',
+      body: fs.createReadStream(archivePath),
+      duplex: "half",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': '*/*',
+        'Content-Type': 'application/zip'
+      }
+    })
+  }
+
+  async getWorldContent(realmId) {
+    return await this.rest.get(`/world/${realmId}/content`)
+  }
+
+  async updateWorldContent(realmId, behaviorPacks, resourcePacks) {
+    return await this.rest.post(`/world/${realmId}/content/`, {
+      body: { behaviorPacks, resourcePacks }
+    })
+  }
+
+  async uploadBehaviourPack(realmId, behaviourPackPath, archiveSavePath = path.join(behaviourPackPath, "..", "packArchive"), packPosition = 0) {
+    const manifestPath = path.join(behaviourPackPath, "manifest.json")
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+
+    const packName = path.basename(behaviourPackPath)
+    const archivePath = path.join(archiveSavePath, `${packName}.zip`)
+
+    await util.createZip(behaviourPackPath, archivePath)
+    await this.isPackAccessible(manifest)
+    await this.uploadPack(archivePath, realmId)
+
+    let { behaviorPacks, resourcePacks } = await this.getWorldContent(realmId)
+
+    behaviorPacks = behaviorPacks.filter(pack => pack.packId !== manifest.header.uuid)
+
+    const newPack = {
+      packId: manifest.header.uuid,
+      version: JSON.stringify(manifest.header.version),
+      position: packPosition,
+      isMarketplacePack: false
+    }
+
+    behaviorPacks.splice(packPosition, 0, { ...newPack, position: packPosition })
+
+    for (let i = 0; i < behaviorPacks.length; i++) {
+      behaviorPacks[i].position = i
+    }
+
+    await this.updateWorldContent(realmId, behaviorPacks, resourcePacks)
+  }
+
+  async uploadResourcePack(realmId, resourcePackPath, archiveSavePath = path.join(resourcePackPath, "..", "packArchive"), packPosition = 0) {
+    const manifestPath = path.join(resourcePackPath, "manifest.json")
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+
+    const packName = path.basename(resourcePackPath)
+    const archivePath = path.join(archiveSavePath, `${packName}.zip`)
+
+    await util.createZip(resourcePackPath, archivePath)
+    await this.isPackAccessible(manifest)
+    await this.uploadPack(archivePath, realmId)
+
+    let { behaviorPacks, resourcePacks } = await this.getWorldContent(realmId)
+
+    resourcePacks = resourcePacks.filter(pack => pack.packId !== manifest.header.uuid)
+
+    const newPack = {
+      packId: manifest.header.uuid,
+      version: JSON.stringify(manifest.header.version),
+      position: packPosition,
+      isMarketplacePack: false
+    }
+
+    resourcePacks.splice(packPosition, 0, { ...newPack, position: packPosition })
+
+    for (let i = 0; i < resourcePacks.length; i++) {
+      resourcePacks[i].position = i
+    }
+
+    await this.updateWorldContent(realmId, behaviorPacks, resourcePacks)
+  }
+
+
+
 }

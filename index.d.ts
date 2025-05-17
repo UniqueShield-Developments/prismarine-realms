@@ -53,6 +53,24 @@ declare module 'prismarine-realms' {
     changeIsTexturePackRequired(realmId: string, forced: boolean): Promise<void>
     changeRealmDefaultPermission(realmId: string, permission: string): Promise<void>
     changeRealmPlayerPermission(realmId: string, permission: string, uuid: string): Promise<void>
+    uploadBehaviourPack(realmId: string, behaviourPackPath: string, archiveSavePath?: string, packPosition?: number): Promise<void>
+    uploadResourcePack(realmId: string, resourcePackPath: string, archiveSavePath?: string, packPosition?: number): Promise<void>
+    getWorldContent(realmId: string): Promise<WorldContent>
+    updateWorldContent(realmId: string, behaviourPacks: Pack[], resourcePacks: Pack[]): Promise<void>
+    uploadPack(archivePath: string, realmId: string): Promise<void>
+  }
+
+
+  export interface Pack {
+    packId: string,
+    version: string,
+    position: number,
+    isMarketplacePack: boolean
+  }
+
+  export interface WorldContent {
+    behabehaviorPacks: Pack[]
+    resourcePacks: Pack[]
   }
 
   export class JavaRealmAPI extends RealmAPI {
