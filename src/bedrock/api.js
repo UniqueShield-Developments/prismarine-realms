@@ -1,16 +1,22 @@
+const path = require("path")
+const fs = require('fs');
+const zlib = require('zlib');
+const util = require('util');
+
 const RealmAPI = require('../index')
 
 const Realm = require('../structures/Realm')
-const Download = require('../structures/Download')
+const Download = require('../structures/Download');
+const Code = require("../structures/Code");
 
 module.exports = class BedrockRealmAPI extends RealmAPI {
-  async getRealmAddress (realmId) {
+  async getRealmAddress(realmId) {
     const data = await this.rest.get(`/worlds/${realmId}/join`)
     const [host, port] = data.address.split(':')
     return { host, port: Number(port) }
   }
 
-  async getRealmFromInvite (realmInviteCode, invite = true) {
+  async getRealmFromInvite(realmInviteCode, invite = true) {
     if (!realmInviteCode) throw new Error('Need to provide a realm invite code/link')
     const clean = realmInviteCode.replace(/https:\/\/realms.gg\//g, '')
     const data = await this.rest.get(`/worlds/v1/link/${clean}`)
@@ -18,40 +24,11 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async getRealmInvite (realmId) {
-    const data = await this.rest.get(`/links/v1?worldId=${realmId}`)
-    return {
-      inviteCode: data[0].linkId,
-      ownerXUID: data[0].profileUuid,
-      type: data[0].type,
-      createdOn: data[0].ts,
-      inviteLink: data[0].url,
-      deepLinkUrl: data[0].deepLinkUrl
-    }
-  }
-
-  async refreshRealmInvite (realmId) {
-    const data = await this.rest.post('/links/v1', {
-      body: {
-        type: 'INFINITE',
-        worldId: realmId
-      }
-    })
-    return {
-      inviteCode: data.linkId,
-      ownerXUID: data.profileUuid,
-      type: data.type,
-      createdOn: data.ts,
-      inviteLink: data.url,
-      deepLinkUrl: data.deepLinkUrl
-    }
-  }
-
-  async getPendingInviteCount () {
+  async getPendingInviteCount() {
     return await this.rest.get('/invites/count/pending')
   }
 
-  async getPendingInvites () {
+  async getPendingInvites() {
     const data = await this.rest.get('/invites/pending')
     return data.invites.map(invite => {
       return {
@@ -65,22 +42,22 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     })
   }
 
-  async acceptRealmInvitation (invitationId) {
+  async acceptRealmInvitation(invitationId) {
     await this.rest.put(`/invites/accept/${invitationId}`)
   }
 
-  async rejectRealmInvitation (invitationId) {
+  async rejectRealmInvitation(invitationId) {
     await this.rest.put(`/invites/reject/${invitationId}`)
   }
 
-  async acceptRealmInviteFromCode (inviteCode) {
+  async acceptRealmInviteFromCode(inviteCode) {
     if (!inviteCode) throw new Error('Need to provide a realm invite code/link')
     const clean = inviteCode.replace(/https:\/\/realms.gg\//g, '')
     const data = await this.rest.post(`/invites/v1/link/accept/${clean}`)
     return new Realm(this, data)
   }
 
-  async invitePlayer (realmId, uuid) {
+  async invitePlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -91,12 +68,12 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async getRealmWorldDownload (realmId, slotId, backupId = 'latest') {
+  async getRealmWorldDownload(realmId, slotId, backupId = 'latest') {
     const data = await this.rest.get(`/archive/download/world/${realmId}/${slotId}/${backupId}`) // if backupId = latest will get the world as it is now not the most recent backup
     return new Download(this, data)
   }
 
-  async resetRealm (realmId) {
+  async resetRealm(realmId) {
     await this.rest.put(`/worlds/${realmId}/reset`)
   }
 
@@ -107,7 +84,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
   //   })
   // }
 
-  async removePlayerFromRealm (realmId, xuid) {
+  async removePlayerFromRealm(realmId, xuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -118,7 +95,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async opRealmPlayer (realmId, uuid) {
+  async opRealmPlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -129,7 +106,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async deopRealmPlayer (realmId, uuid) {
+  async deopRealmPlayer(realmId, uuid) {
     const data = await this.rest.put(`/invites/${realmId}/invite/update`, {
       body: {
         invites: {
@@ -140,19 +117,19 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
-  async banPlayerFromRealm (realmId, uuid) {
+  async banPlayerFromRealm(realmId, uuid) {
     await this.rest.post(`/worlds/${realmId}/blocklist/${uuid}`)
   }
 
-  async unbanPlayerFromRealm (realmId, uuid) {
+  async unbanPlayerFromRealm(realmId, uuid) {
     await this.rest.delete(`/worlds/${realmId}/blocklist/${uuid}`)
   }
 
-  async removeRealmFromJoinedList (realmId) {
+  async removeRealmFromJoinedList(realmId) {
     await this.rest.delete(`/invites/${realmId}`)
   }
 
-  async changeIsTexturePackRequired (realmId, forced) {
+  async changeIsTexturePackRequired(realmId, forced) {
     if (forced) {
       await this.rest.put(`/world/${realmId}/content/texturePacksRequired`)
     } else {
@@ -160,7 +137,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     }
   }
 
-  async changeRealmDefaultPermission (realmId, permission) {
+  async changeRealmDefaultPermission(realmId, permission) {
     await this.rest.put(`/world/${realmId}/defaultPermission`, {
       body: {
         permission: permission.toUpperCase()
@@ -168,7 +145,7 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     })
   }
 
-  async changeRealmPlayerPermission (realmId, permission, uuid) {
+  async changeRealmPlayerPermission(realmId, permission, uuid) {
     await this.rest.put(`/world/${realmId}/userPermission`, {
       body: {
         permission: permission.toUpperCase(),
@@ -176,4 +153,75 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
       }
     })
   }
+  async uploadBehaviourPack(realmId, behaviourPackPath, archiveSavePath = path.join(behaviourPackPath, "..", "packArchive")) {
+    const mkdir = util.promisify(fs.mkdir);
+    const pipeline = util.promisify(require('stream').pipeline);
+
+    await mkdir(archiveSavePath, { recursive: true });
+
+    const packName = path.basename(behaviourPackPath);
+    const archivePath = path.join(archiveSavePath, `${packName}.gz`);
+
+    const source = fs.createReadStream(behaviourPackPath);
+    const destination = fs.createWriteStream(archivePath);
+    const gzip = zlib.createGzip();
+
+    await pipeline(source, gzip, destination);
+
+    const buffer = await fs.promises.readFile(archivePath);
+    const slotId = this.getRealm(realmId).activeSlot
+    const { token } = await this.rest.get(`/archive/upload/packs/${realmId}/${slotId}`)
+    await this.rest.post("/packs", {
+      headers: {
+        "authorization": `Bearer ${token}`
+      },
+      body: buffer
+    })
+
+
+  }
+
+  async createRealmLink(worldId, expirationDate = null, enabled = true) {
+    const body = {
+      type: "INFINITE",
+      enabled,
+      worldId
+    }
+
+    if (expirationDate !== null) body.expirationDate = expirationDate
+
+    const data = await this.rest.post("/links/v1", { body })
+    return new Code(this, data)
+  }
+
+  async getRealmLinks(worldId) {
+    const data = await this.rest.get(`/links/v1?worldId=${worldId}`)
+    return data.map(code => new Code(this, { ...code, worldId }))
+  }
+
+  async updateRealmLink(worldId, linkId, enabled = true, expirationDate = null) {
+    const body = {
+      enabled,
+      linkId,
+      worldId
+    }
+
+    if (expirationDate !== null) body.expirationDate = expirationDate
+
+    return await this.rest.post("/links/v1/update", { body })
+  }
+
+  async setRealmLinkEnabled(worldId, linkId, enabled) {
+    return await this.updateRealmLink(worldId, linkId, enabled, null)
+  }
+
+  async setRealmLinkExpiry(worldId, linkId, expirationDate) {
+    return await this.updateRealmLink(worldId, linkId, true, expirationDate)
+  }
+
+  async deleteRealmLink(linkId) {
+    return await this.rest.delete(`/links/v1/delete/${linkId}`)
+  }
+
+
 }

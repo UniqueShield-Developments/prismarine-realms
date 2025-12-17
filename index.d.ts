@@ -1,40 +1,42 @@
 /// <reference types="node" />
 import { Authflow } from "prismarine-auth";
 
-declare module 'prismarine-realms' {
+declare module "prismarine-realms" {
   export class Options {
     skipAuth?: Boolean
     maxRetries?: Number
-    usePreview?: Boolean // Bedrock only
+    usePreview?: Boolean
   }
 
   export class RealmAPI {
-    /**
-     * Creates a new RealmAPI instance, which handles and authenticates calls to the Realms API
-     * @param authflow An Authflow instance from [prismarine-auth](https://github.com/PrismarineJS/prismarine-auth).
-     * @param platform Which platforms API to access
-     */
-    constructor(authflow: Authflow, platform: 'bedrock' | 'java', options?: Options)
+    constructor(authflow: Authflow, platform: "bedrock" | "java", options?: Options)
 
-    static from(authflow: Authflow, platform: 'bedrock' | 'java', options?: Options): BedrockRealmAPI | JavaRealmAPI
+    static from(authflow: Authflow, platform: "bedrock" | "java", options?: Options): BedrockRealmAPI | JavaRealmAPI
 
     getRealms(): Promise<Realm[]>
     getRealm(realmId: string): Promise<Realm>
     getRealmAddress(realmId: string): Promise<Address>
     getRealmBackups(realmId: string, slotId: string): Promise<Backup[]>
-    getRealmWorldDownload(realmId: string, slotId: string, backupId?: string | 'latest'): Promise<Download>
+    getRealmWorldDownload(realmId: string, slotId: string, backupId?: string | "latest"): Promise<Download>
     restoreRealmFromBackup(realmId: string, slotId: string, backupId: string): Promise<string>
-    changeRealmState(realmId: string, state: 'open' | 'close'): Promise<boolean>
+    changeRealmState(realmId: string, state: "open" | "close"): Promise<boolean>
     getRealmSubscriptionInfo(realmId: string, detailed: boolean): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
     changeRealmActiveSlot(realmId: string, slotId: number): Promise<boolean>
     changeRealmNameAndDescription(realmId: string, name: string, description: string): Promise<void>
     deleteRealm(realmId: string): Promise<void>
-
   }
 
   export class BedrockRealmAPI extends RealmAPI {
     getRealmFromInvite(realmInviteCode: string, invite: boolean): Promise<Realm>
     invitePlayer(realmId: string, uuid: string): Promise<Realm>
+
+    createRealmLink(worldId: string, expirationDate?: number | null, enabled?: boolean): Promise<Code>
+    updateRealmLink(worldId: string, linkId: string, enabled: boolean, expirationDate?: number | null): Promise<Code>
+    setRealmLinkEnabled(worldId: string, linkId: string, enabled: boolean): Promise<Code>
+    setRealmLinkExpiry(worldId: string, linkId: string, expirationDate: number | null): Promise<Code>
+    deleteRealmLink(linkId: string): Promise<void>
+    getRealmLinks(worldId: string): Promise<Code[]>
+
     getRealmInvite(realmId: string): Promise<RealmInvite>
     refreshRealmInvite(realmId: string): Promise<RealmInvite>
     getPendingInviteCount(): Promise<number>
@@ -43,7 +45,6 @@ declare module 'prismarine-realms' {
     rejectRealmInvitation(invitationId: string): Promise<void>
     acceptRealmInviteFromCode(realmInviteCode: string): Promise<Realm>
     resetRealm(realmId: string): Promise<void>
-    // changeRealmConfiguration(realmId: string, configuration: any): Promise<void>
     removePlayerFromRealm(realmId: string, xuid: string): Promise<Realm>
     opRealmPlayer(realmId: string, uuid: string): Promise<Realm>
     deopRealmPlayer(realmId: string, uuid: string): Promise<Realm>
@@ -53,10 +54,26 @@ declare module 'prismarine-realms' {
     changeIsTexturePackRequired(realmId: string, forced: boolean): Promise<void>
     changeRealmDefaultPermission(realmId: string, permission: string): Promise<void>
     changeRealmPlayerPermission(realmId: string, permission: string, uuid: string): Promise<void>
+    uploadBehaviourPack(realmId: string, behaviourPackPath: string, archiveSavePath: string): Promise<void>
   }
 
   export class JavaRealmAPI extends RealmAPI {
     invitePlayer(realmId: string, uuid: string, name: string): Promise<Realm>
+  }
+
+  export interface Code {
+    linkId: string
+    profileUuid: string
+    type: string
+    createdOn: number
+    url: string
+    deepLinkUrl: string
+    enabled: boolean
+    expirationDate: number | null
+
+    setEnabled(enabled: boolean): Promise<void>
+    setExpiry(expirationDate: number | null): Promise<void>
+    delete(): Promise<void>
   }
 
   export interface Realm {
@@ -68,8 +85,12 @@ declare module 'prismarine-realms' {
     getBackups(): Promise<Backup[]>
     getWorldDownload(): Promise<Download>
     getSubscriptionInfo(): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
-    changeActiveSlot(): Promise<boolean>
-    changeNameAndDescription(): Promise<void>
+    changeActiveSlot(slotId: number): Promise<boolean>
+    changeNameAndDescription(name: string, description: string): Promise<void>
+
+    getCodes(): Promise<Code[]>
+    createCode(expirationDate?: number | null, enabled?: boolean): Promise<Code>
+
     id: number
     remoteSubscriptionId: string
     owner: string | null
@@ -119,11 +140,11 @@ declare module 'prismarine-realms' {
     writeToDirectory(directory: string): Promise<void>
     getBuffer(): Promise<Buffer>
     downloadUrl: string
-    fileExtension: '.mcworld' | '.tar.gz'
-    resourcePackUrl?: string // Java only
-    resourcePackHash?: string // Java only
-    size?: number // Bedrock only
-    token?: string // Bedrock only
+    fileExtension: ".mcworld" | ".tar.gz"
+    resourcePackUrl?: string
+    resourcePackHash?: string
+    size?: number
+    token?: string
   }
 
   export interface RealmSubscriptionInfo {
@@ -152,20 +173,20 @@ declare module 'prismarine-realms' {
   }
 
   export interface RealmInvite {
-    inviteCode: string,
-    ownerXUID: string,
-    type: string,
-    createdOn: number,
-    inviteLink: string,
-    deepLinkUrl: string,
+    inviteCode: string
+    ownerXUID: string
+    type: string
+    createdOn: number
+    inviteLink: string
+    deepLinkUrl: string
   }
 
   export interface RealmPlayer {
-    uuid: string,
-    name: string,
-    operator: boolean,
-    accepted: boolean,
-    online: boolean,
+    uuid: string
+    name: string
+    operator: boolean
+    accepted: boolean
+    online: boolean
     permission: string
   }
 

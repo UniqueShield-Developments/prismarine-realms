@@ -1,6 +1,6 @@
 module.exports = class Realm {
   #api
-  constructor (api, data) {
+  constructor(api, data) {
     this.#api = api
     Object.assign(this, {
       id: data.id,
@@ -29,43 +29,51 @@ module.exports = class Realm {
     })
   }
 
-  async getAddress () {
+  async getCodes() {
+    return this.#api.getRealmLinks(this.id)
+  }
+
+  async createCode(expirationDate = null, enabled = true) {
+    return this.#api.createRealmLink(this.id, expirationDate, enabled)
+  }
+
+  async getAddress() {
     return this.#api.getRealmAddress(this.id)
   }
 
-  async invitePlayer (uuid, name) {
+  async invitePlayer(uuid, name) {
     return this.#api.invitePlayer(this.id, uuid, name)
   }
 
-  async open () {
-    return this.#api.changeRealmState(this.id, 'open')
+  async open() {
+    return this.#api.changeRealmState(this.id, "open")
   }
 
-  async close () {
-    return this.#api.changeRealmState(this.id, 'close')
+  async close() {
+    return this.#api.changeRealmState(this.id, "close")
   }
 
-  async delete () {
+  async delete() {
     return this.#api.deleteRealm(this.id)
   }
 
-  async getWorldDownload () {
-    return this.#api.getRealmWorldDownload(this.id, this.activeSlot, 'latest')
+  async getWorldDownload() {
+    return this.#api.getRealmWorldDownload(this.id, this.activeSlot, "latest")
   }
 
-  async getBackups () {
+  async getBackups() {
     return this.#api.getRealmBackups(this.id, this.activeSlot)
   }
 
-  async getSubscriptionInfo (detailed = false) {
+  async getSubscriptionInfo(detailed = false) {
     return this.#api.getRealmSubscriptionInfo(this.id, detailed)
   }
 
-  async changeActiveSlot (slotId) {
+  async changeActiveSlot(slotId) {
     return this.#api.changeRealmActiveSlot(this.id, slotId)
   }
 
-  async changeNameAndDescription (name, description) {
+  async changeNameAndDescription(name, description) {
     return this.#api.changeRealmNameAndDescription(this.id, name, description)
   }
 }
