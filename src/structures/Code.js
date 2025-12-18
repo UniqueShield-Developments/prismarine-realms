@@ -3,6 +3,7 @@ module.exports = class Code {
     constructor(api, data) {
         this.#api = api
         Object.assign(this, {
+            worldId: data.worldId,
             linkId: data.linkId,
             profileUuid: data.profileUuid,
             type: data.type,

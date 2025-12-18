@@ -1,39 +1,59 @@
 /// <reference types="node" />
-import { Authflow } from "prismarine-auth";
+import { Authflow } from "prismarine-auth"
 
 declare module "prismarine-realms" {
   export class Options {
-    skipAuth?: Boolean
-    maxRetries?: Number
-    usePreview?: Boolean
+    skipAuth?: boolean
+    maxRetries?: number
+    usePreview?: boolean
   }
 
   export class RealmAPI {
     constructor(authflow: Authflow, platform: "bedrock" | "java", options?: Options)
 
-    static from(authflow: Authflow, platform: "bedrock" | "java", options?: Options): BedrockRealmAPI | JavaRealmAPI
+    static from(
+      authflow: Authflow,
+      platform: "bedrock" | "java",
+      options?: Options
+    ): BedrockRealmAPI | JavaRealmAPI
 
     getRealms(): Promise<Realm[]>
     getRealm(realmId: string): Promise<Realm>
     getRealmAddress(realmId: string): Promise<Address>
-    getRealmBackups(realmId: string, slotId: string): Promise<Backup[]>
-    getRealmWorldDownload(realmId: string, slotId: string, backupId?: string | "latest"): Promise<Download>
-    restoreRealmFromBackup(realmId: string, slotId: string, backupId: string): Promise<string>
+    getRealmBackups(realmId: string, slotId: number): Promise<Backup[]>
+    getRealmWorldDownload(
+      realmId: string,
+      slotId: number,
+      backupId?: string | "latest"
+    ): Promise<Download>
+    restoreRealmFromBackup(realmId: string, slotId: number, backupId: string): Promise<string>
     changeRealmState(realmId: string, state: "open" | "close"): Promise<boolean>
-    getRealmSubscriptionInfo(realmId: string, detailed: boolean): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
+    getRealmSubscriptionInfo(
+      realmId: string,
+      detailed: boolean
+    ): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
     changeRealmActiveSlot(realmId: string, slotId: number): Promise<boolean>
     changeRealmNameAndDescription(realmId: string, name: string, description: string): Promise<void>
     deleteRealm(realmId: string): Promise<void>
   }
 
   export class BedrockRealmAPI extends RealmAPI {
-    getRealmFromInvite(realmInviteCode: string, invite: boolean): Promise<Realm>
+    getRealmFromInvite(realmInviteCode: string, invite?: boolean): Promise<Realm>
     invitePlayer(realmId: string, uuid: string): Promise<Realm>
 
-    createRealmLink(worldId: string, expirationDate?: number | null, enabled?: boolean): Promise<Code>
-    updateRealmLink(worldId: string, linkId: string, enabled: boolean, expirationDate?: number | null): Promise<Code>
-    setRealmLinkEnabled(worldId: string, linkId: string, enabled: boolean): Promise<Code>
-    setRealmLinkExpiry(worldId: string, linkId: string, expirationDate: number | null): Promise<Code>
+    createRealmLink(
+      worldId: string,
+      expirationDate?: number | null,
+      enabled?: boolean
+    ): Promise<Code>
+    updateRealmLink(
+      worldId: string,
+      linkId: string,
+      enabled: boolean,
+      expirationDate?: number | null
+    ): Promise<void>
+    setRealmLinkEnabled(worldId: string, linkId: string, enabled: boolean): Promise<void>
+    setRealmLinkExpiry(worldId: string, linkId: string, expirationDate: number | null): Promise<void>
     deleteRealmLink(linkId: string): Promise<void>
     getRealmLinks(worldId: string): Promise<Code[]>
 
@@ -54,31 +74,49 @@ declare module "prismarine-realms" {
     changeIsTexturePackRequired(realmId: string, forced: boolean): Promise<void>
     changeRealmDefaultPermission(realmId: string, permission: string): Promise<void>
     changeRealmPlayerPermission(realmId: string, permission: string, uuid: string): Promise<void>
-    uploadBehaviourPack(realmId: string, behaviourPackPath: string, archiveSavePath?: string, packPosition?: number): Promise<void>
-    uploadResourcePack(realmId: string, resourcePackPath: string, archiveSavePath?: string, packPosition?: number): Promise<void>
+
+    uploadBehaviourPack(
+      realmId: string,
+      behaviourPackPath: string,
+      archiveSavePath?: string,
+      packPosition?: number
+    ): Promise<void>
+
+    uploadResourcePack(
+      realmId: string,
+      resourcePackPath: string,
+      archiveSavePath?: string,
+      packPosition?: number
+    ): Promise<void>
+
     getWorldContent(realmId: string): Promise<WorldContent>
-    updateWorldContent(realmId: string, behaviourPacks: Pack[], resourcePacks: Pack[]): Promise<void>
+    updateWorldContent(
+      realmId: string,
+      behaviorPacks: Pack[],
+      resourcePacks: Pack[]
+    ): Promise<void>
+
     uploadPack(archivePath: string, realmId: string): Promise<void>
-  }
-
-
-  export interface Pack {
-    packId: string,
-    version: string,
-    position: number,
-    isMarketplacePack: boolean
-  }
-
-  export interface WorldContent {
-    behabehaviorPacks: Pack[]
-    resourcePacks: Pack[]
   }
 
   export class JavaRealmAPI extends RealmAPI {
     invitePlayer(realmId: string, uuid: string, name: string): Promise<Realm>
   }
 
+  export interface Pack {
+    packId: string
+    version: string
+    position: number
+    isMarketplacePack: boolean
+  }
+
+  export interface WorldContent {
+    behaviorPacks: Pack[]
+    resourcePacks: Pack[]
+  }
+
   export interface Code {
+    worldId: string
     linkId: string
     profileUuid: string
     type: string
@@ -95,13 +133,13 @@ declare module "prismarine-realms" {
 
   export interface Realm {
     getAddress(): Promise<Address>
-    invitePlayer(uuid: string, name: string): Promise<Realm>
+    invitePlayer(uuid: string): Promise<Realm>
     open(): Promise<boolean>
     close(): Promise<boolean>
     delete(): Promise<void>
     getBackups(): Promise<Backup[]>
     getWorldDownload(): Promise<Download>
-    getSubscriptionInfo(): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
+    getSubscriptionInfo(detailed?: boolean): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
     changeActiveSlot(slotId: number): Promise<boolean>
     changeNameAndDescription(name: string, description: string): Promise<void>
 

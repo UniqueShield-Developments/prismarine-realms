@@ -29,51 +29,51 @@ module.exports = class Realm {
     })
   }
 
-  async getCodes() {
+  getCodes() {
     return this.#api.getRealmLinks(this.id)
   }
 
-  async createCode(expirationDate = null, enabled = true) {
+  createCode(expirationDate = null, enabled = true) {
     return this.#api.createRealmLink(this.id, expirationDate, enabled)
   }
 
-  async getAddress() {
+  getAddress() {
     return this.#api.getRealmAddress(this.id)
   }
 
-  async invitePlayer(uuid, name) {
-    return this.#api.invitePlayer(this.id, uuid, name)
+  invitePlayer(uuid) {
+    return this.#api.invitePlayer(this.id, uuid)
   }
 
-  async open() {
+  open() {
     return this.#api.changeRealmState(this.id, "open")
   }
 
-  async close() {
+  close() {
     return this.#api.changeRealmState(this.id, "close")
   }
 
-  async delete() {
+  delete() {
     return this.#api.deleteRealm(this.id)
   }
 
-  async getWorldDownload() {
+  getWorldDownload() {
     return this.#api.getRealmWorldDownload(this.id, this.activeSlot, "latest")
   }
 
-  async getBackups() {
+  getBackups() {
     return this.#api.getRealmBackups(this.id, this.activeSlot)
   }
 
-  async getSubscriptionInfo(detailed = false) {
+  getSubscriptionInfo(detailed = false) {
     return this.#api.getRealmSubscriptionInfo(this.id, detailed)
   }
 
-  async changeActiveSlot(slotId) {
+  changeActiveSlot(slotId) {
     return this.#api.changeRealmActiveSlot(this.id, slotId)
   }
 
-  async changeNameAndDescription(name, description) {
+  changeNameAndDescription(name, description) {
     return this.#api.changeRealmNameAndDescription(this.id, name, description)
   }
 }
