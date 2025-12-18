@@ -24,6 +24,35 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     return new Realm(this, data)
   }
 
+  async getRealmInvite(realmId) {
+    const data = await this.rest.get(`/links/v1?worldId=${realmId}`)
+    return {
+      inviteCode: data[0].linkId,
+      ownerXUID: data[0].profileUuid,
+      type: data[0].type,
+      createdOn: data[0].ts,
+      inviteLink: data[0].url,
+      deepLinkUrl: data[0].deepLinkUrl
+    }
+  }
+
+  async refreshRealmInvite(realmId) {
+    const data = await this.rest.post('/links/v1', {
+      body: {
+        type: 'INFINITE',
+        worldId: realmId
+      }
+    })
+    return {
+      inviteCode: data.linkId,
+      ownerXUID: data.profileUuid,
+      type: data.type,
+      createdOn: data.ts,
+      inviteLink: data.url,
+      deepLinkUrl: data.deepLinkUrl
+    }
+  }
+
   async getPendingInviteCount() {
     return await this.rest.get('/invites/count/pending')
   }
@@ -222,6 +251,116 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
   async deleteRealmLink(linkId) {
     return await this.rest.delete(`/links/v1/delete/${linkId}`)
   }
+
+
+
+  async isPackAccessible(manifest) {
+    const [authHeader, authToken] = this.rest.getAuth()
+
+    const versionStr = Array.isArray(manifest.header.version)
+      ? manifest.header.version.join('.')
+      : manifest.header.version
+
+    const res = await fetch(`https://pocket.realms.minecraft.net/pack/${manifest.header.uuid}/${versionStr}`, {
+      method: 'HEAD',
+      headers: {
+        [authHeader]: authToken,
+        'User-Agent': 'MCPE/UWP',
+        'Accept': '*/*'
+      }
+    })
+
+    return res.status === 204
+  }
+
+
+  async uploadPack(archivePath, realmId) {
+    const { token, uploadUrl } = await this.rest.get(`/archive/upload/packs/${realmId}/1`)
+
+    await fetch(uploadUrl, {
+      method: 'POST',
+      body: fs.createReadStream(archivePath),
+      duplex: "half",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': '*/*',
+        'Content-Type': 'application/zip'
+      }
+    })
+  }
+
+  async getWorldContent(realmId) {
+    return await this.rest.get(`/world/${realmId}/content`)
+  }
+
+  async updateWorldContent(realmId, behaviorPacks, resourcePacks) {
+    return await this.rest.post(`/world/${realmId}/content/`, {
+      body: { behaviorPacks, resourcePacks }
+    })
+  }
+
+  async uploadBehaviourPack(realmId, behaviourPackPath, archiveSavePath = path.join(behaviourPackPath, "..", "packArchive"), packPosition = 0) {
+    const manifestPath = path.join(behaviourPackPath, "manifest.json")
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+
+    const packName = path.basename(behaviourPackPath)
+    const archivePath = path.join(archiveSavePath, `${packName}.zip`)
+
+    await util.createZip(behaviourPackPath, archivePath)
+    await this.isPackAccessible(manifest)
+    await this.uploadPack(archivePath, realmId)
+
+    let { behaviorPacks, resourcePacks } = await this.getWorldContent(realmId)
+
+    behaviorPacks = behaviorPacks.filter(pack => pack.packId !== manifest.header.uuid)
+
+    const newPack = {
+      packId: manifest.header.uuid,
+      version: JSON.stringify(manifest.header.version),
+      position: packPosition,
+      isMarketplacePack: false
+    }
+
+    behaviorPacks.splice(packPosition, 0, { ...newPack, position: packPosition })
+
+    for (let i = 0; i < behaviorPacks.length; i++) {
+      behaviorPacks[i].position = i
+    }
+
+    await this.updateWorldContent(realmId, behaviorPacks, resourcePacks)
+  }
+
+  async uploadResourcePack(realmId, resourcePackPath, archiveSavePath = path.join(resourcePackPath, "..", "packArchive"), packPosition = 0) {
+    const manifestPath = path.join(resourcePackPath, "manifest.json")
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+
+    const packName = path.basename(resourcePackPath)
+    const archivePath = path.join(archiveSavePath, `${packName}.zip`)
+
+    await util.createZip(resourcePackPath, archivePath)
+    await this.isPackAccessible(manifest)
+    await this.uploadPack(archivePath, realmId)
+
+    let { behaviorPacks, resourcePacks } = await this.getWorldContent(realmId)
+
+    resourcePacks = resourcePacks.filter(pack => pack.packId !== manifest.header.uuid)
+
+    const newPack = {
+      packId: manifest.header.uuid,
+      version: JSON.stringify(manifest.header.version),
+      position: packPosition,
+      isMarketplacePack: false
+    }
+
+    resourcePacks.splice(packPosition, 0, { ...newPack, position: packPosition })
+
+    for (let i = 0; i < resourcePacks.length; i++) {
+      resourcePacks[i].position = i
+    }
+
+    await this.updateWorldContent(realmId, behaviorPacks, resourcePacks)
+  }
+
 
 
 }

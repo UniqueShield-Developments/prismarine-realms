@@ -1,0 +1,46 @@
+{
+    "format_version": 2,
+    "header": {
+        "description": "",
+        "name": "Upload Behaviour pack test",
+        "uuid": "2d23369e-a3a5-435e-b489-9db7217f81cf",
+        "min_engine_version": [
+            1,
+            20,
+            40
+        ],
+        "version": [
+            1,
+            4,
+            0
+        ]
+    },
+    "modules": [
+        {
+            "type": "data",
+            "uuid": "e636e7d7-4930-4f66-87ad-50b7cd3f354c",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "type": "script",
+            "language": "javascript",
+            "entry": "scripts/index.js",
+            "uuid": "50a81a23-40a8-4385-898f-9f3c7ad35d5b",
+            "version": [
+                1,
+                0,
+                0
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "module_name": "@minecraft/server",
+            "version": "2.0.0-beta"
+        }
+    ]
+}

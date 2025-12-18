@@ -28,12 +28,13 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^11.0.1",
     "nock": "^13.2.4",
-    "prismarine-auth": "^2.0.1",
     "prismarine-realms": "file:.",
+    "prismarine-auth": "^2.7.0",
     "standard": "^17.0.0"
   },
   "dependencies": {
     "debug": "^4.3.3",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "archiver": "^7.0.1"
   }
 }
