@@ -20,13 +20,11 @@ declare module "prismarine-realms" {
     getRealms(): Promise<Realm[]>
     getRealm(realmId: string): Promise<Realm>
     getRealmAddress(realmId: string): Promise<Address>
-    getRealmBackups(realmId: string, slotId: number): Promise<Backup[]>
     getRealmWorldDownload(
       realmId: string,
       slotId: number,
       backupId?: string | "latest"
     ): Promise<Download>
-    restoreRealmFromBackup(realmId: string, slotId: number, backupId: string): Promise<string>
     changeRealmState(realmId: string, state: "open" | "close"): Promise<boolean>
     getRealmSubscriptionInfo(
       realmId: string,
@@ -41,17 +39,58 @@ declare module "prismarine-realms" {
     getRealmFromInvite(realmInviteCode: string, invite?: boolean): Promise<Realm>
     invitePlayer(realmId: string, uuid: string): Promise<Realm>
 
+    getRealmBackups(
+      realmId: string,
+      slotId: number
+    ): Promise<{
+      saved: {
+        storageTotal: number
+        storageUsed: number
+        backups: Backup[]
+      }
+      automatic: Backup[]
+    }>
+
+    saveRealmBackup(
+      realmId: string,
+      slotId: number,
+      name: string,
+      backupsToReplace?: string[]
+    ): Promise<void>
+
+    saveRealmAutoBackup(
+      realmId: string,
+      slotId: number,
+      backupId: string,
+      name: string,
+      backupsToReplace?: string[]
+    ): Promise<void>
+
+    restoreRealmBackup(
+      realmId: string,
+      slotId: number,
+      backupId: string
+    ): Promise<void>
+
+    deleteRealmBackup(
+      realmId: string,
+      slotId: number,
+      backupId: string
+    ): Promise<void>
+
     createRealmLink(
       worldId: string,
       expirationDate?: number | null,
       enabled?: boolean
     ): Promise<Code>
+
     updateRealmLink(
       worldId: string,
       linkId: string,
       enabled: boolean,
       expirationDate?: number | null
     ): Promise<void>
+
     setRealmLinkEnabled(worldId: string, linkId: string, enabled: boolean): Promise<void>
     setRealmLinkExpiry(worldId: string, linkId: string, expirationDate: number | null): Promise<void>
     deleteRealmLink(linkId: string): Promise<void>
@@ -103,41 +142,23 @@ declare module "prismarine-realms" {
     invitePlayer(realmId: string, uuid: string, name: string): Promise<Realm>
   }
 
-  export interface Pack {
-    packId: string
-    version: string
-    position: number
-    isMarketplacePack: boolean
-  }
-
-  export interface WorldContent {
-    behaviorPacks: Pack[]
-    resourcePacks: Pack[]
-  }
-
-  export interface Code {
-    worldId: string
-    linkId: string
-    profileUuid: string
-    type: string
-    createdOn: number
-    url: string
-    deepLinkUrl: string
-    enabled: boolean
-    expirationDate: number | null
-
-    setEnabled(enabled: boolean): Promise<void>
-    setExpiry(expirationDate: number | null): Promise<void>
-    delete(): Promise<void>
-  }
-
   export interface Realm {
     getAddress(): Promise<Address>
     invitePlayer(uuid: string): Promise<Realm>
     open(): Promise<boolean>
     close(): Promise<boolean>
     delete(): Promise<void>
-    getBackups(): Promise<Backup[]>
+
+    getBackups(): Promise<{
+      saved: Backup[]
+      automatic: Backup[]
+    }>
+
+    saveBackup(name: string, slotId?: number, backupsToReplace?: string[]): Promise<void>
+    saveAutoBackup(backupId: string, name: string, slotId?: number, backupsToReplace?: string[]): Promise<void>
+    restoreBackup(backupId: string, slotId?: number): Promise<void>
+    deleteBackup(backupId: string, slotId?: number): Promise<void>
+
     getWorldDownload(): Promise<Download>
     getSubscriptionInfo(detailed?: boolean): Promise<RealmSubscriptionInfo | RealmSubscriptionInfoDetailed>
     changeActiveSlot(slotId: number): Promise<boolean>
@@ -172,23 +193,20 @@ declare module "prismarine-realms" {
   }
 
   export interface Backup {
+    id: string
+    name: string
+    date: string
+    uncompressedSize: number
+    compressedSize: number
+    gameMode: string
+    gameDifficulty: string
+    gameServerVersion: string
+    worldType: string
+    isHardcore: boolean
+
     getDownload(): Promise<Download>
     restore(): Promise<void>
-    id: string
-    lastModifiedDate: number
-    size: number
-    metadata: {
-      gameDifficulty: string
-      name: string
-      gameServerVersion: string
-      enabledPacks: {
-        resourcePack: string
-        behaviorPack: string
-      }
-      description: string | null
-      gamemode: string
-      worldType: string
-    }
+    delete(): Promise<void>
   }
 
   export interface Download {
@@ -200,6 +218,18 @@ declare module "prismarine-realms" {
     resourcePackHash?: string
     size?: number
     token?: string
+  }
+
+  export interface Pack {
+    packId: string
+    version: string
+    position: number
+    isMarketplacePack: boolean
+  }
+
+  export interface WorldContent {
+    behaviorPacks: Pack[]
+    resourcePacks: Pack[]
   }
 
   export interface RealmSubscriptionInfo {

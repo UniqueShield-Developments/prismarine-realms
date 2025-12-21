@@ -1,7 +1,6 @@
 const Rest = require('./rest')
 
 const Realm = require('./structures/Realm')
-const Backup = require('./structures/Backup')
 
 class RealmAPI {
   constructor(authflow, platform, options = {}) {
@@ -23,15 +22,6 @@ class RealmAPI {
   async getRealms() {
     const data = await this.rest.get('/worlds')
     return data.servers.map(realm => new Realm(this, realm))
-  }
-
-  async getRealmBackups(realmId, slotId) {
-    const data = await this.rest.get(`/worlds/${realmId}/backups`)
-    return data.backups.map(e => new Backup(this, { realmId, slotId }, e))
-  }
-
-  async restoreRealmFromBackup(realmId, backupId) {
-    return await this.rest.put(`/worlds/${realmId}/backups?backupId=${encodeURIComponent(backupId)}&clientSupportsRetries`)
   }
 
   async getRealmSubscriptionInfo(realmId, detailed = false) {

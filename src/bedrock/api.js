@@ -255,4 +255,43 @@ module.exports = class BedrockRealmAPI extends RealmAPI {
     resourcePacks.forEach((p, i) => (p.position = i))
     await this.updateWorldContent(realmId, behaviorPacks, resourcePacks)
   }
+
+  async getRealmBackups(realmId, slotId) {
+    const data = await this.rest.get(`/api/v1.0/worlds/${realmId}/backups/${slotId}`)
+    const realmCtx = { realmId, slotId }
+    const { storageTotal, storageUsed } = data.result.savedBackups
+    const saved = data.result.savedBackups.backups.map(b => new (require("../structures/Backup"))(this, realmCtx, b))
+    const auto = data.result.automaticBackups.map(b => new (require("../structures/Backup"))(this, realmCtx, b))
+
+    return { saved: { storageTotal, storageUsed, backups: saved }, automatic: auto }
+  }
+
+  async saveRealmBackup(realmId, slotId, name, backupsToReplace = null) {
+    return this.rest.post(`/api/v1.0/worlds/${realmId}/backups/${slotId}`, {
+      body: {
+        backupsToReplace,
+        name
+      }
+    })
+  }
+
+  async saveRealmAutoBackup(realmId, slotId, backupId, name, backupsToReplace = null) {
+    return this.rest.post(`/api/v1.0/worlds/${realmId}/backups/${slotId}/${backupId}`, {
+      body: {
+        backupsToReplace,
+        name
+      }
+    })
+  }
+
+  async restoreRealmBackup(realmId, slotId, backupId) {
+    return this.rest.put(`/api/v1.0/worlds/${realmId}/backups/${slotId}/restore/${backupId}`)
+  }
+
+  async deleteRealmBackup(realmId, slotId, backupId) {
+    return this.rest.delete(`/api/v1.0/worlds/${realmId}/backups/${slotId}/${backupId}`)
+  }
+  async getWorldSize(realmId, slotId) {
+    return (await this.rest.get(`/api/v1.0/worlds/${realmId}/backups/${slotId}/currentSize`)).result.sizeInBytes
+  }
 }

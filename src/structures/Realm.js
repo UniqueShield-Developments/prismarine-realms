@@ -65,6 +65,26 @@ module.exports = class Realm {
     return this.#api.getRealmBackups(this.id, this.activeSlot)
   }
 
+  saveBackup(name, slotId = this.activeSlot, backupsToReplace = null) {
+    return this.#api.saveRealmBackup(this.id, slotId, name, backupsToReplace)
+  }
+
+  saveAutoBackup(backupId, name, slotId = this.activeSlot, backupsToReplace = null) {
+    return this.#api.saveRealmAutoBackup(this.id, slotId, backupId, name, backupsToReplace)
+  }
+
+  restoreBackup(backupId, slotId = this.activeSlot) {
+    return this.#api.restoreRealmBackup(this.id, slotId, backupId)
+  }
+
+  deleteBackup(backupId, slotId = this.activeSlot) {
+    return this.#api.deleteRealmBackup(this.id, slotId, backupId)
+  }
+
+  getWorldSize(slotId = this.activeSlot) {
+    return this.#api.getWorldSize(this.id, slotId)
+  }
+
   getSubscriptionInfo(detailed = false) {
     return this.#api.getRealmSubscriptionInfo(this.id, detailed)
   }
