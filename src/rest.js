@@ -12,7 +12,13 @@ module.exports = class Rest {
     this.host = constants[platform].host
     this.userAgent = constants[platform].userAgent
     if (platform === 'bedrock') {
-      this.getAuth = () => formatBedrockAuth(tokens)
+      this.getAuth = () => {
+        if (typeof tokens.getXboxToken === 'function') {
+          const xbl = tokens.getXboxToken("https://pocket.realms.minecraft.net/")
+          return formatBedrockAuth(xbl)
+        }
+        return formatBedrockAuth(tokens)
+      }
     }
     this.maxRetries = options.maxRetries ?? 4
   }
