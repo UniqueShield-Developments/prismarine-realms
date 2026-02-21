@@ -12,9 +12,9 @@ module.exports = class Rest {
     this.host = constants[platform].host
     this.userAgent = constants[platform].userAgent
     if (platform === 'bedrock') {
-      this.getAuth = () => {
+      this.getAuth = async () => {
         if (typeof tokens.getXboxToken === 'function') {
-          const xbl = tokens.getXboxToken("https://pocket.realms.minecraft.net/")
+          const xbl = await tokens.getXboxToken("https://pocket.realms.minecraft.net/")
           return formatBedrockAuth(xbl)
         }
         return formatBedrockAuth(tokens)
