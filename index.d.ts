@@ -6,6 +6,7 @@ declare module "prismarine-realms" {
     skipAuth?: boolean
     maxRetries?: number
     usePreview?: boolean
+    minecraftVersion?: String
   }
 
   export class RealmAPI {
